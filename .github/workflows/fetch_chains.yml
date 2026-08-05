@@ -1,0 +1,41 @@
+name: Fetch CBOE Option Chains
+
+# Declenchement :
+#  - cron programme (heure UTC !)
+#  - possibilite de lancer manuellement depuis l'onglet "Actions" de GitHub (bouton "Run workflow")
+on:
+  schedule:
+    # Exemple : tous les jours ouvres (lun-ven) a 20:30 UTC
+    # = 22:30 heure de Paris en ete (UTC+2) / 21:30 en hiver (UTC+1)
+    # Adapte l'heure a ta convenance (attention: GitHub cron est TOUJOURS en UTC).
+    - cron: "30 20 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # necessaire pour que le workflow puisse "git push" les CSV
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dependances
+        run: pip install requests pandas xlsxwriter
+
+      - name: Telecharger les chaines d'options
+        run: python cboe_option_chain.py SPX AAPL VIX TSLA NDX BMNR META -o data
+
+      - name: Committer les resultats
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/*.csv
+          git commit -m "Auto: chaines d'options $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "Rien de nouveau a committer"
+          git push
