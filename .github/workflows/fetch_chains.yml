@@ -5,7 +5,7 @@ name: Fetch CBOE Option Chains
 #  - possibilite de lancer manuellement depuis l'onglet "Actions" de GitHub (bouton "Run workflow")
 on:
   schedule:
-    # Toutes les 30 min, lun-ven, de 13:00 a 21:30 UTC.
+    # Toutes les 30 min (a :05 et :35, PAS a :00/:30), lun-ven, de 13:00 a 21:30 UTC.
     # Le marche US (NYSE/Nasdaq) est ouvert 9h30-16h00 heure de New York, ce qui donne :
     #   - 13:30-20:00 UTC en heure d'ete US (EDT, ~mars a novembre)
     #   - 14:30-21:00 UTC en heure d'hiver US (EST, le reste de l'annee)
@@ -13,7 +13,10 @@ on:
     # chaque cote (pas de bascule manuelle a faire au changement d'heure US).
     # GitHub cron ne connait pas les jours feries US (marche ferme) : ces jours-la,
     # le run se declenche quand meme mais recupere juste des donnees figees.
-    - cron: "*/30 13-21 * * 1-5"
+    # IMPORTANT : GitHub deconseille les minutes rondes (:00/:30) car ce sont les
+    # plus chargees (tout le monde programme ses crons dessus -> gros retards,
+    # parfois des creneaux sautes). D'ou le decalage a :05/:35.
+    - cron: "5,35 13-21 * * 1-5"
   workflow_dispatch: {}
 
 permissions:
